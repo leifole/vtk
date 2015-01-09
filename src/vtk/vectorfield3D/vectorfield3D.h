@@ -26,6 +26,8 @@
 #include <vtkOrientationMarkerWidget.h>
 #include <base/Pose.hpp>
 #include <base/Eigen.hpp>
+#include <vtkObject.h>
+#include <vtkCamera.h>
 
 /// Widget to display vector (flux density) fields in Vizkit based on VTK.
   
@@ -59,11 +61,24 @@ public slots:
   void addVector(double px, double py, double pz,
                  double x, double y, double z);
 
+  /** adapt last inserted vector */
+  void adaptVector(double px, double py, double pz,
+                 double x, double y, double z);
   /** Toggle visibility of scalar range legend bar */
   void showScalarBar(bool b);
 
   /** toggle visibility of orientatin marker */
   void showOrientationMarker(bool b);
+
+  void setInitialMagRange(double min, double max);
+  
+  void setBackground(double r, double g, double b);
+
+  void setCameraPosition(double x, double y, double z);
+  void setCameraFocalPoint(double x, double y, double z);
+  void setCameraViewUp(double x, double y, double z);
+  
+  //void myCallback(vtkObject*,unsigned long eid, void* clientdata, void* calldata);
 
 private:
   vtkSmartPointer<vtkPolyData> vectorfield;
@@ -74,6 +89,7 @@ private:
   vtkSmartPointer<vtkRenderer> ren;
   vtkSmartPointer<vtkScalarBarActor> scalarBar;
   vtkSmartPointer<vtkOrientationMarkerWidget> marker;
+  vtkSmartPointer<vtkCamera> cam;
   double mag_max, mag_min;
 };
 

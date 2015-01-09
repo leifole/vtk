@@ -5,12 +5,13 @@
 #include <vtkGlyph3D.h>
 #include <vtkPolyDataReader.h>
 #include <vtkRenderWindow.h>
-#include <vtkCamera.h>
 #include <vtkActor.h>
 #include <vtkRenderWindowInteractor.h>
 #include <vtkInteractorStyleTrackballCamera.h>
 #include <vtkPointData.h>
 #include <vtkAxesActor.h>
+//#include <vtkCallbackCommand.h>
+//#include <vtkCommand.h>
 
 Vectorfield3D::Vectorfield3D(QWidget *parent)
     : QVTKWidget(parent), 
@@ -22,6 +23,7 @@ Vectorfield3D::Vectorfield3D(QWidget *parent)
     ren(vtkSmartPointer<vtkRenderer>::New()),
     scalarBar(vtkSmartPointer<vtkScalarBarActor>::New()),
     marker(vtkSmartPointer<vtkOrientationMarkerWidget>::New()),
+    cam(vtkSmartPointer<vtkCamera>::New()),
     mag_max(0.0), mag_min(1.0)
 {
 
@@ -55,7 +57,6 @@ Vectorfield3D::Vectorfield3D(QWidget *parent)
   glyph->SetScaleFactor(0.2);
 
   // Set up camera view
-  vtkSmartPointer<vtkCamera> cam = vtkSmartPointer<vtkCamera>::New();
   cam->SetPosition(10.0, 0, 0);
   cam->SetFocalPoint(0.0, 0.0, 0.0);
   //cam->SetViewUp(0.0, 0.0, 0.0);
@@ -82,13 +83,13 @@ scalarBar->SetOrientationToHorizontal();
   // Renderer
   ren->AddActor(glyphActor);
   ren->AddActor(scalarBar);
-  ren->SetBackground( 0.8, 0.8, 0.8 );
+  //ren->SetBackground( 0.8, 0.8, 0.8 );
   ren->SetActiveCamera(cam);
 
   // render window
   vtkSmartPointer<vtkRenderWindow> renWin = vtkSmartPointer<vtkRenderWindow>::New();
   renWin->AddRenderer( ren );
-  //renWin->SetSize(1024, 768);
+  renWin->SetSize(1024, 768);
   SetRenderWindow(renWin);
 
   vtkSmartPointer<vtkAxesActor> axes = vtkSmartPointer<vtkAxesActor>::New();
@@ -98,6 +99,10 @@ scalarBar->SetOrientationToHorizontal();
   marker->SetViewport(0.0, 0.0, 0.25, 0.25);
   marker->SetEnabled(1);
   marker->InteractiveOff();
+  
+  //vtkSmartPointer<vtkCallbackCommand> renderCallback = vtkSmartPointer<vtkCallbackCommand>::New();
+  //renderCallback->SetCallback(myCallback);
+  //ren->AddObserver(vtkCommand::StartEvent,renderCallback);
 }
 
 Vectorfield3D::~Vectorfield3D()
@@ -129,6 +134,25 @@ void Vectorfield3D::addVector(double px, double py, double pz,
  update();
 }   
 
+void Vectorfield3D::adaptVector(double px, double py, double pz,
+                              double x, double y, double z){
+ double v[3];
+ v[0] = x;
+ v[1] = y;
+ v[2] = z;
+ double magnitude = sqrt(x*x + y*y + z*z);
+ if (magnitude < mag_min) mag_min = magnitude;
+ if (magnitude > mag_max) mag_max = magnitude;
+ int id = points->GetNumberOfPoints();
+ points->SetPoint(id-1,px, py, pz);
+ points->Modified();
+ vectors->InsertTuple(id-1, v);
+ vectors->Modified();
+ glyphMapper->SetScalarRange(mag_min, mag_max);
+ update();
+}   
+
+
 void Vectorfield3D::addVector(base::Position pos, base::Vector3d flux){
   Vectorfield3D::addVector(pos(0), pos(1), pos(2), flux(0), flux(1), flux(2));
 }
@@ -150,5 +174,36 @@ void Vectorfield3D::setScalarBarTitle(QString title){
   update();
 }
 
+void Vectorfield3D::setInitialMagRange(double min, double max){
+  mag_min = min;
+  mag_max = max;
+  update();
+}
 
+void Vectorfield3D::setBackground(double r, double g, double b){
+  ren->SetBackground(r,g,b);
+}
 
+void Vectorfield3D::setCameraPosition(double x, double y, double z){
+  cam->SetPosition(x,y,z);
+}
+
+void Vectorfield3D::setCameraFocalPoint(double x, double y, double z){
+  cam->SetFocalPoint(x,y,z);
+}
+
+void Vectorfield3D::setCameraViewUp(double x, double y, double z){
+  cam->SetViewUp(x,y,z);
+}
+
+//void Vectorfield3D::myCallback(vtkObject* caller,unsigned long eid, void* clientdata, void* calldata){
+//  double pos[3];
+//  double focal[3];
+//  double up[3];
+//
+//  cam->GetPosition(pos);
+//  cam->GetFocalPoint(focal);
+//  cam->GetViewUp(up);
+//
+//  printf("Pos: %f, %f, %f\n",pos[0], pos[1], pos[2]);
+//}
