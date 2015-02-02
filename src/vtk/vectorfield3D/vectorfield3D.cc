@@ -134,8 +134,7 @@ void Vectorfield3D::addVector(double px, double py, double pz,
  update();
 }   
 
-void Vectorfield3D::adaptVector(double px, double py, double pz,
-                              double x, double y, double z){
+void Vectorfield3D::adaptLastVector(double x, double y, double z){
  double v[3];
  v[0] = x;
  v[1] = y;
@@ -144,14 +143,25 @@ void Vectorfield3D::adaptVector(double px, double py, double pz,
  if (magnitude < mag_min) mag_min = magnitude;
  if (magnitude > mag_max) mag_max = magnitude;
  int id = points->GetNumberOfPoints();
- points->SetPoint(id-1,px, py, pz);
- points->Modified();
  vectors->InsertTuple(id-1, v);
  vectors->Modified();
  glyphMapper->SetScalarRange(mag_min, mag_max);
  update();
 }   
 
+void Vectorfield3D::adaptVector(int id, double x, double y, double z){
+ double v[3];
+ v[0] = x;
+ v[1] = y;
+ v[2] = z;
+ double magnitude = sqrt(x*x + y*y + z*z);
+ if (magnitude < mag_min) mag_min = magnitude;
+ if (magnitude > mag_max) mag_max = magnitude;
+ vectors->InsertTuple(id, v);
+ vectors->Modified();
+ glyphMapper->SetScalarRange(mag_min, mag_max);
+ update();
+}   
 
 void Vectorfield3D::addVector(base::Position pos, base::Vector3d flux){
   Vectorfield3D::addVector(pos(0), pos(1), pos(2), flux(0), flux(1), flux(2));

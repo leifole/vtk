@@ -1,7 +1,7 @@
 
 find_package(Qt4 REQUIRED QtCore QtGui QtOpengl QtDesigner )
 
-option(USE_VTK "Use VTK for additional Widgets" FALSE)
+option(USE_VTK "Use VTK for additional Widgets" ON)
 option(USE_GST "Use GStreamer in GstImageView" OFF)
 
 ## If you want to use GStreamer, uncomment the following
